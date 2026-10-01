@@ -99,3 +99,24 @@ class Agent:
             self.needs.satisfy_hunger(satiation_yield)
 
         return True
+
+    def calculate_wtp(self, item_name: str, conservatism: float = 2.0) -> float:
+        """Calculates Willingness to Pay (WTP) based strictly on internal state 
+        (primary urgency and liquid cash) without requiring external price anchors.
+        
+        Args:
+            item_name (str): Name of the commodity.
+            conservatism (float): Exponent governing liquidity preservation. 
+                                  Higher values keep bids low until high urgency.
+        """
+        urgency = self.needs.primary_urgency
+        cash = self.balance_sheet.cash
+        
+        if urgency <= 0.0 or cash <= 0.0:
+            return 0.0
+
+        # Convex budget fraction modeling risk aversion and cash preservation
+        budget_fraction = urgency ** conservatism
+        
+        raw_bid = cash * budget_fraction
+        return round(raw_bid, 2)

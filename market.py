@@ -120,3 +120,28 @@ class Agent:
         
         raw_bid = cash * budget_fraction
         return round(raw_bid, 2)
+
+    def calculate_wts(self, item_name: str) -> float | None:
+        """Calculates Willingness to Sell (WTS) - the minimum price at which 
+        the agent is willing to part with one unit of an item.
+        
+        Strictly reflects the subjective reservation value (the opportunity 
+        cost of giving up the item's internal utility).
+        
+        Returns:
+            float | None: Reservation price in USD, or None if no stock exists.
+        """
+        quantity = self.balance_sheet.inventory.get(item_name, 0.0)
+        
+        # Cannot sell what you do not own
+        if quantity <= 0.0:
+            return None
+
+        urgency = self.needs.primary_urgency
+
+        # Pure reservation value: marginal utility of keeping the item
+        # High quantity & low urgency -> low floor price
+        # Low quantity & high hunger   -> high floor price
+        reservation_value = (1.0 + urgency) / quantity
+        
+        return round(max(0.01, reservation_value), 2)
